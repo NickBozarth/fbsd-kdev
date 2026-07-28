@@ -5,3 +5,10 @@ version = 4
 [[package]]
 name = "experimental"
 version = "0.1.0"
+dependencies = [
+ "fbsd-kdev",
+]
+
+[[package]]
+name = "fbsd-kdev"
+version = "0.1.0"

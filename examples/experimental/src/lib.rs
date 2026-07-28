@@ -4,8 +4,12 @@
  * Dont expect anything super meaningful, just a way to feel how features
  *  might be implemented
  */
-
+#![no_std]
 
 struct MyDev;
 
-impl 
+impl Cdev {
+    fn open() {
+
+    }
+}
