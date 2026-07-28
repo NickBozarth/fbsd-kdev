@@ -6,9 +6,21 @@
  */
 #![no_std]
 
-use fbsd_kdev::driver::device::Cdev;
+use core::ffi::*;
+use fbsd_kdev::prelude::*;
 
-struct MyDev;
+unsafe extern "C" fn d_open(
+    dev: *mut cdev, 
+    oflags: c_int, 
+    devtype: c_int, 
+    td: *mut thread
+) -> c_int {
+    0
+}
 
-impl Cdev for MyDev {
+const EXPERIMENTAL_CDEVSW: Cdevsw = Cdevsw::new(cstr!("experimental"))
+    .with_open(d_open);
+
+fn init_dev(global_cdev: &mut Option<Cdevsw>) {
+    *global_cdev = Some(EXPERIMENTAL_CDEVSW);
 }
