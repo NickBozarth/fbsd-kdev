@@ -35,41 +35,14 @@ pub type c___uintptr_t = u32;
 
 
 
-#[repr(C)]
-pub struct thread {
-    _private: [u8; 0]
-}
-
-#[repr(C)]
-pub struct cdev {
-    _private: [u8; 0]
-}
-
-#[repr(C)]
-pub struct cfile {
-    _private: [u8; 0]
-}
-
-#[repr(C)]
-pub struct uio {
-    _private: [u8; 0]
-}
-
-#[repr(C)]
-pub struct bio {
-    _private: [u8; 0]
-}
-
-#[repr(C)]
-pub struct knote {
-    _private: [u8; 0]
-}
-
-#[repr(C)]
-pub struct vmobject {
-    _private: [u8; 0]
-}
-
+#[repr(C)] pub struct thread   { _private: [u8; 0] }
+#[repr(C)] pub struct cdev     { _private: [u8; 0] }
+#[repr(C)] pub struct cfile    { _private: [u8; 0] }
+#[repr(C)] pub struct uio      { _private: [u8; 0] }
+#[repr(C)] pub struct bio      { _private: [u8; 0] }
+#[repr(C)] pub struct knote    { _private: [u8; 0] }
+#[repr(C)] pub struct vmobject { _private: [u8; 0] }
+#[repr(C)] pub struct ucred    { _private: [u8;0] }
 
 
 
