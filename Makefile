@@ -1,7 +1,7 @@
 RUST_LIB_DIR := fbsd-kdev
-TARGET_DIR := target
+TARGET_DIR ?= target
 LIB_FILE := libfbsd_kdev.a
-TARGET_ARCH := aarch64-unknown-none
+TARGET_ARCH ?= aarch64-unknown-none
 
 
 build:

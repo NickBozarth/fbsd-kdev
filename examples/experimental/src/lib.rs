@@ -6,10 +6,9 @@
  */
 #![no_std]
 
+use fbsd_kdev::driver::device::Cdev;
+
 struct MyDev;
 
-impl Cdev {
-    fn open() {
-
-    }
+impl Cdev for MyDev {
 }
