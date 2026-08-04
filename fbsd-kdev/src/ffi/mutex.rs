@@ -4,6 +4,8 @@ use crate::{cstr, ffi::{traits::AsCstr, types::{StructWitness, typedefs::{c___ui
 
 
 /*
+ * SUPPORTED FUNCTIONS SO FAR
+ *
  * mtx_init()
  * mtx_lock()
  * mtx_unlock()
