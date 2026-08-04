@@ -41,6 +41,7 @@ unsafe extern "C" {
 
 
 impl StructMutex {
+
 // #define	mtx_init(m, n, t, o)						\
 // 	_mtx_init(&(m)->mtx_lock, n, t, o)
     pub unsafe fn mtx_init(
@@ -168,10 +169,32 @@ pub struct StructMutex {
     mtx_lock: c___uintptr_t
 }
 
+impl StructMutex {
+    pub const fn new() -> Self {
+        Self {
+            lock_object:    StructLockObject::new(),
+            mtx_lock:       0x04
+        }
+    }
+}
+
+
+
 #[repr(C)]
 pub struct StructLockObject {
     lo_name: *const c_char,
     lo_flags: c_uint,
     lo_data: c_uint,
     lo_witness: *mut StructWitness
+}
+
+impl StructLockObject {
+    pub const fn new() -> Self {
+        Self {
+            lo_name: core::ptr::null(),
+            lo_flags: 0,
+            lo_data: 0,
+            lo_witness: core::ptr::null_mut()
+        }
+    }
 }
