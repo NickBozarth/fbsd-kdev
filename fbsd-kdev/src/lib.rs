@@ -8,6 +8,7 @@ pub mod driver;
 pub mod types;
 pub mod prelude;
 pub mod sys;
+pub mod sync;
 
 
 

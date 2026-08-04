@@ -1,0 +1,175 @@
+use core::ffi::{c_char, c_int, c_uint};
+
+use crate::{cstr, ffi::{traits::AsCstr, types::{StructWitness, typedefs::{c___uintptr_t, c_uintptr_t}}}};
+
+
+/*
+ * mtx_init()
+ * mtx_lock()
+ * mtx_unlock()
+ * mtx_destroy()
+ * */
+
+
+unsafe extern "C" {
+    fn _mtx_init(
+        c:      *mut c___uintptr_t,
+        name:   *const c_char,
+        mtype:  *const c_char,
+        opts:   c_int
+    );
+
+    fn __mtx_lock_flags(
+        c: *mut c_uintptr_t,
+        opts: c_int,
+        file: *const c_char,
+        line: c_int
+    );
+
+    fn __mtx_unlock_flags(
+        c: *mut c_uintptr_t,
+        opts: c_int,
+        file: *const c_char,
+        line: c_int
+    );
+
+    fn _mtx_destroy(c: *mut c_uintptr_t);
+}
+
+
+
+impl StructMutex {
+// #define	mtx_init(m, n, t, o)						\
+// 	_mtx_init(&(m)->mtx_lock, n, t, o)
+    pub unsafe fn mtx_init(
+        &mut self,
+        n: *const c_char,
+        t: *const c_char,
+        o: c_int
+    ) {
+        let c = &raw mut self.mtx_lock;
+        let name = n;
+        let mtype = t;
+        let opts = o;
+        unsafe { _mtx_init(c, name, mtype, opts); }
+    }
+
+// #define	_mtx_lock_flags(m, o, f, l)					\
+// 	__mtx_lock_flags(&(m)->mtx_lock, o, f, l)
+    unsafe fn _mtx_lock_flags(
+        &mut self,
+        o: c_int,
+        f: *const c_char,
+        l: c_int
+    ) {
+        unsafe {
+            __mtx_lock_flags(
+                &raw mut self.mtx_lock,
+                o,
+                f,
+                l
+            );
+        }
+    }
+// #define	mtx_lock_flags_(m, opts, file, line)				\
+// 	_mtx_lock_flags((m), (opts), (file), (line))
+    unsafe fn mtx_lock_flags_(
+        &mut self,
+        opts: c_int,
+        file: *const c_char,
+        line: c_int
+    ) {
+        unsafe {
+            self._mtx_lock_flags(opts, file, line);
+        }
+    }
+// #define	mtx_lock_flags(m, opts)						\
+// 	mtx_lock_flags_((m), (opts), LOCK_FILE, LOCK_LINE)
+    unsafe fn mtx_lock_flags(&mut self, opts: c_int) {
+        unsafe {
+            self.mtx_lock_flags_(
+                opts,
+                cstr!(file!()),
+                line!() as c_int
+            );
+        }
+    }
+// #define mtx_lock(m)		mtx_lock_flags((m), 0)
+    pub unsafe fn mtx_lock(&mut self) {
+        unsafe { self.mtx_lock_flags(0); }
+    }
+
+
+
+
+// #define	_mtx_unlock_flags(m, o, f, l)					\
+// 	__mtx_unlock_flags(&(m)->mtx_lock, o, f, l)
+    unsafe fn _mtx_unlock_flags(
+        &mut self,
+        o: c_int,
+        f: *const c_char,
+        l: c_int
+    ) {
+        unsafe {
+            __mtx_unlock_flags(
+                &raw mut self.mtx_lock,
+                o,
+                f,
+                l
+            );
+        }
+    }
+// #define	mtx_unlock_flags_(m, opts, file, line)				\
+// 	_mtx_unlock_flags((m), (opts), (file), (line))
+    unsafe fn mtx_unlock_flags_(
+        &mut self,
+        opts: c_int,
+        file: *const c_char,
+        line: c_int
+    ) {
+        unsafe {
+            self._mtx_unlock_flags(opts, file, line);
+        }
+    }
+// #define	mtx_unlock_flags(m, opts)					\
+// 	mtx_unlock_flags_((m), (opts), LOCK_FILE, LOCK_LINE)
+    unsafe fn mtx_unlock_flags(&mut self, opts: c_int) {
+        unsafe {
+            self.mtx_unlock_flags_(
+                opts,
+                cstr!(file!()),
+                line!() as c_int
+            );
+        }
+    }
+// #define mtx_unlock(m)		mtx_unlock_flags((m), 0)
+    pub unsafe fn mtx_unlock(&mut self) {
+        unsafe { self.mtx_unlock_flags(0); }
+    }
+
+
+
+
+// #define	mtx_destroy(m)							\
+// 	_mtx_destroy(&(m)->mtx_lock)
+    pub unsafe fn mtx_destroy(&mut self) {
+        unsafe { _mtx_destroy(&raw mut self.mtx_lock); }
+    }
+}
+
+
+
+
+#[repr(C)]
+pub struct StructMutex {
+    lock_object: StructLockObject,
+    mtx_lock: c___uintptr_t
+}
+
+#[repr(C)]
+pub struct StructLockObject {
+    lo_name: *const c_char,
+    lo_flags: c_uint,
+    lo_data: c_uint,
+    lo_witness: *mut StructWitness
+}
