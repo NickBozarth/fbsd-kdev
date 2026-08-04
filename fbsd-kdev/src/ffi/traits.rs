@@ -1,8 +1,13 @@
-use core::ffi::c_char;
+use core::{ffi::c_char, fmt::Display};
 
 
 
 struct NonNullTerminatedError;
+impl Display for NonNullTerminatedError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.write_str("AsCstr.as_cstr() failed because data was not null-terminated")
+    }
+}
 
 pub trait AsCstr {
     fn as_cstr(&self) -> Result<*const c_char, NonNullTerminatedError>;

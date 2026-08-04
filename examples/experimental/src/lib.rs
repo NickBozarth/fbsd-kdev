@@ -6,21 +6,9 @@
  */
 #![no_std]
 
-use core::ffi::*;
 use fbsd_kdev::prelude::*;
 
-unsafe extern "C" fn d_open(
-    dev: *mut cdev, 
-    oflags: c_int, 
-    devtype: c_int, 
-    td: *mut thread
-) -> c_int {
-    0
-}
 
-const EXPERIMENTAL_CDEVSW: Cdevsw = Cdevsw::new(cstr!("experimental"))
-    .with_open(d_open);
-
-fn init_dev(global_cdev: &mut Option<Cdevsw>) {
-    *global_cdev = Some(EXPERIMENTAL_CDEVSW);
+extern "Rust" fn init() -> Result<(), c_int> {
+    Ok(())
 }

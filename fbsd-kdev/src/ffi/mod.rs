@@ -1,4 +1,6 @@
 pub mod macros;
-pub mod panic;
-pub mod io;
-pub mod traits;
+pub(crate) mod io;
+pub(crate) mod traits;
+pub(crate) mod device;
+pub(crate) mod types;
+pub(crate) mod panic;

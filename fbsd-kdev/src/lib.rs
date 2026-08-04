@@ -7,7 +7,7 @@ pub mod ffi;
 pub mod driver;
 pub mod types;
 pub mod prelude;
-
+pub mod sys;
 
 
 
@@ -20,7 +20,7 @@ pub unsafe extern "C" fn rust_modinit(
 
     match event_type {
         0 => {
-            match driver::init::init() {
+            match driver::init::init_dev() {
                 Ok(()) => {
                     uprintln!("Successfully created device");
                     0
