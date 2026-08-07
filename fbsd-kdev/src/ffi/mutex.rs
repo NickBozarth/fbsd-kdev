@@ -1,6 +1,6 @@
 use core::ffi::{c_char, c_int, c_uint};
 
-use crate::{cstr, ffi::{traits::AsCstr, types::{StructWitness, typedefs::{c___uintptr_t, c_uintptr_t}}}};
+use crate::{cstr, ffi::{types::{StructWitness, typedefs::{c___uintptr_t, c_uintptr_t}}}};
 
 
 /*
@@ -28,6 +28,13 @@ unsafe extern "C" {
         line: c_int
     );
 
+    fn _mtx_trylock_flags_(
+        c: *mut c_uintptr_t,
+        opts: c_int,
+        file: *const c_char,
+        line: c_int
+    ) -> c_int;
+
     fn __mtx_unlock_flags(
         c: *mut c_uintptr_t,
         opts: c_int,
@@ -40,7 +47,7 @@ unsafe extern "C" {
 
 
 
-impl StructMutex {
+impl StructMtx {
 
 // #define	mtx_init(m, n, t, o)						\
 // 	_mtx_init(&(m)->mtx_lock, n, t, o)
@@ -104,6 +111,42 @@ impl StructMutex {
 
 
 
+// #define	mtx_trylock_flags_(m, o, f, l)					\
+// 	_mtx_trylock_flags_(&(m)->mtx_lock, o, f, l)
+    unsafe fn mtx_trylock_flags_(
+        &mut self,
+        o: c_int,
+        f: *const c_char,
+        l: c_int
+    ) -> c_int {
+        unsafe {
+            _mtx_trylock_flags_(
+                &raw mut self.mtx_lock,
+                o,
+                f,
+                l
+            )
+        }
+    }
+// #define mtx_trylock_flags(m, opts)					\
+// 	mtx_trylock_flags_((m), (opts), LOCK_FILE, LOCK_LINE)
+    unsafe fn mtx_trylock_flags(&mut self, opts: c_int) -> c_int {
+        unsafe {
+            self.mtx_trylock_flags_(
+                opts,
+                cstr!(file!()),
+                line!() as c_int
+            )
+        }
+    }
+// #define mtx_trylock(m)		mtx_trylock_flags((m), 0)
+    pub fn mtx_trylock(&mut self) -> c_int {
+        unsafe { self.mtx_trylock_flags(0) }
+    }
+
+
+
+
 
 // #define	_mtx_unlock_flags(m, o, f, l)					\
 // 	__mtx_unlock_flags(&(m)->mtx_lock, o, f, l)
@@ -158,18 +201,22 @@ impl StructMutex {
     pub unsafe fn mtx_destroy(&mut self) {
         unsafe { _mtx_destroy(&raw mut self.mtx_lock); }
     }
+
+    pub fn mtx_initialized(&self) -> bool {
+        self.lock_object.lock_initialized()
+    }
 }
 
 
 
 
 #[repr(C)]
-pub struct StructMutex {
+pub struct StructMtx {
     lock_object: StructLockObject,
     mtx_lock: c___uintptr_t
 }
 
-impl StructMutex {
+impl StructMtx {
     pub const fn new() -> Self {
         Self {
             lock_object:    StructLockObject::new(),
@@ -196,5 +243,9 @@ impl StructLockObject {
             lo_data: 0,
             lo_witness: core::ptr::null_mut()
         }
+    }
+
+    pub fn lock_initialized(&self) -> bool {
+        (self.lo_flags & 0x00010000) != 0
     }
 }

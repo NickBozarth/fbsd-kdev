@@ -1,30 +1,107 @@
-use core::cell::UnsafeCell;
+use core::{cell::UnsafeCell, ffi::c_char, ops::{Deref, DerefMut}};
 
-use crate::ffi::mutex::StructMutex;
+use alloc::boxed::Box;
+
+use crate::ffi::mutex::StructMtx;
 
 
-pub enum MutexState {
-    Uninitialized,
-    Unlocked,
-    Locked
+
+pub enum MutexError {
+    NotInitialized,
+    AlreadyInitialized,
+    TryLockFail
 }
 
+impl core::fmt::Display for MutexError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Self::NotInitialized     => write!(f, "Mutex is not initialized"),
+            Self::AlreadyInitialized => write!(f, "Mutex is already initialized"),
+            Self::TryLockFail        => write!(f, "Mutex trylock failed")
+        }
+    }
+}
+
+
 pub struct Mutex<T> {
-    _inner: StructMutex,
-    data: UnsafeCell<T>,
+    _inner: Box<UnsafeCell<StructMtx>>,
+    data:   UnsafeCell<T>,
 }
 
 
 impl<T> Mutex<T> {
-    pub const fn new(data: T) -> Self {
-        Self {
-            _inner: StructMutex::new(),
-            data: UnsafeCell::new(data)
+    pub fn new(name: *const c_char, data: T) -> Self {
+        let mut ret = Self {
+            _inner: Box::new(UnsafeCell::new(StructMtx::new())),
+            data:   UnsafeCell::new(data),
+        };
+
+        unsafe {
+            // TODO MTX_DEF const
+            ret._inner.get_mut().mtx_init(name, core::ptr::null(), 0x00000000);
+        }
+
+        ret
+    }
+
+    pub fn lock(&self) -> Result<MutexGuard<T>, MutexError> {
+        unsafe { (*self._inner.get()).mtx_lock(); }
+
+        Ok(
+            MutexGuard {
+                mutex: self
+            }
+        )
+    }
+
+    pub fn try_lock(&self) -> Result<MutexGuard<T>, MutexError> {
+        if !self.is_initialized() {
+            return Err(MutexError::NotInitialized)
+        }
+
+        let ret = unsafe { (*self._inner.get()).mtx_trylock() };
+
+        match ret {
+            0 => Err(MutexError::TryLockFail),
+            _ => Ok (MutexGuard { mutex: self })
         }
     }
 
-    pub fn lock() {}
+    pub fn is_initialized(&self) -> bool {
+        unsafe { (*self._inner.get()).mtx_initialized() }
+    }
 }
 
-// pub struct MutexGuard<T> {
-// }
+
+impl<T> Drop for Mutex<T> {
+    fn drop(&mut self) {
+        unsafe { (&mut *self._inner.get()).mtx_destroy(); }
+    }
+}
+
+
+
+
+pub struct MutexGuard<'a, T> {
+    mutex: &'a Mutex<T>
+}
+
+impl<T> Deref for MutexGuard<'_, T> {
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        unsafe { &*self.mutex.data.get() }
+    }
+}
+
+impl<T> DerefMut for MutexGuard<'_, T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        unsafe { &mut *self.mutex.data.get() }
+    }
+}
+
+impl<T> Drop for MutexGuard<'_, T> {
+    fn drop(&mut self) {
+        unsafe { (*self.mutex._inner.get()).mtx_unlock(); }
+    }
+}

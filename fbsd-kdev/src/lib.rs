@@ -2,6 +2,7 @@
 
 use core::ffi::{c_int, c_void};
 
+extern crate alloc;
 
 pub mod ffi;
 pub mod driver;

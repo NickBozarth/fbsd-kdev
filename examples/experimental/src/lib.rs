@@ -6,9 +6,13 @@
  */
 #![no_std]
 
-use fbsd_kdev::prelude::*;
+use fbsd_kdev::{prelude::*, sync::mutex::Mutex};
 
 
 extern "Rust" fn init() -> Result<(), c_int> {
+    let m = Mutex::new(cstr!("test mutex"), 1);
+    let mut y = m.lock().unwrap();
+    let z = &mut *y;
+
     Ok(())
 }

@@ -58,15 +58,15 @@ pub mod typedefs {
 
 
 
-#[repr(C)] pub struct StructThread   { _private: [u8; 0] }
-#[repr(C)] pub struct StructCfile    { _private: [u8; 0] }
-#[repr(C)] pub struct StructUio      { _private: [u8; 0] }
-#[repr(C)] pub struct StructBio      { _private: [u8; 0] }
-#[repr(C)] pub struct StructKnote    { _private: [u8; 0] }
-#[repr(C)] pub struct StructVmObject { _private: [u8; 0] }
-#[repr(C)] pub struct StructUcred    { _private: [u8; 0] }
-#[repr(C)] pub struct StructWitness  { _private: [u8; 0] }
-
+#[repr(C)] pub struct StructThread      { _private: [u8; 0] }
+#[repr(C)] pub struct StructCfile       { _private: [u8; 0] }
+#[repr(C)] pub struct StructUio         { _private: [u8; 0] }
+#[repr(C)] pub struct StructBio         { _private: [u8; 0] }
+#[repr(C)] pub struct StructKnote       { _private: [u8; 0] }
+#[repr(C)] pub struct StructVmObject    { _private: [u8; 0] }
+#[repr(C)] pub struct StructUcred       { _private: [u8; 0] }
+#[repr(C)] pub struct StructWitness     { _private: [u8; 0] }
+#[repr(C)] pub struct StructMallocType  { _private: [u8; 0] }
 
 
 
