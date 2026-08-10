@@ -1,5 +1,4 @@
-use core::{cell::UnsafeCell, ffi::c_char, ops::{Deref, DerefMut}};
-
+use core::{cell::UnsafeCell, ffi::c_char, ops::{Deref, DerefMut}, sync::atomic::{AtomicBool, Ordering}};
 use alloc::boxed::Box;
 
 use crate::ffi::mutex::StructMtx;
@@ -12,7 +11,7 @@ pub enum MutexError {
     TryLockFail
 }
 
-impl core::fmt::Display for MutexError {
+impl core::fmt::Debug for MutexError {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             Self::NotInitialized     => write!(f, "Mutex is not initialized"),
@@ -27,6 +26,9 @@ pub struct Mutex<T> {
     _inner: Box<UnsafeCell<StructMtx>>,
     data:   UnsafeCell<T>,
 }
+
+unsafe impl<T: Send> Send for Mutex<T> {}
+unsafe impl<T: Sync> Sync for Mutex<T> {}
 
 
 impl<T> Mutex<T> {
@@ -44,14 +46,12 @@ impl<T> Mutex<T> {
         ret
     }
 
-    pub fn lock(&self) -> Result<MutexGuard<T>, MutexError> {
+    pub fn lock(&self) -> MutexGuard<T> {
         unsafe { (*self._inner.get()).mtx_lock(); }
 
-        Ok(
-            MutexGuard {
-                mutex: self
-            }
-        )
+        MutexGuard {
+            mutex: self
+        }
     }
 
     pub fn try_lock(&self) -> Result<MutexGuard<T>, MutexError> {
@@ -72,10 +72,61 @@ impl<T> Mutex<T> {
     }
 }
 
-
 impl<T> Drop for Mutex<T> {
     fn drop(&mut self) {
         unsafe { (&mut *self._inner.get()).mtx_destroy(); }
+    }
+}
+
+
+
+pub struct GlobalMutex<T> {
+    _inner: UnsafeCell<Option<Mutex<T>>>,
+    is_initialized: AtomicBool,
+    name: *const c_char,
+    init_fn: fn() -> T
+}
+
+unsafe impl<T: Send> Send for GlobalMutex<T> {}
+unsafe impl<T: Sync> Sync for GlobalMutex<T> {}
+
+impl<T> GlobalMutex<T> {
+    pub const fn new_uninit(name: *const c_char, init_fn: fn() -> T) -> Self {
+        Self {
+            _inner: UnsafeCell::new(None),
+            is_initialized: AtomicBool::new(false),
+            name,
+            init_fn
+        }
+    }
+
+    pub fn init(&self) {
+        if !self.is_initialized.load(Ordering::Acquire) {
+            let data = (self.init_fn)();
+
+            unsafe {
+                *self._inner.get() = Some(Mutex::new(self.name, data));
+            }
+
+            self.is_initialized.store(true, Ordering::Release);
+        }
+    }
+
+    pub fn lock(&self) -> Result<MutexGuard<'_, T>, MutexError> {
+        if !self.is_initialized.load(Ordering::Acquire) {
+            self.init();
+        }
+
+        unsafe {
+            match &*self._inner.get() {
+                Some(mutex) => Ok(mutex.lock()),
+                None => Err(MutexError::NotInitialized)
+            }
+        }
+    }
+
+    pub fn is_initialized(&self) -> bool {
+        self.is_initialized.load(Ordering::Acquire)
     }
 }
 
@@ -85,6 +136,8 @@ impl<T> Drop for Mutex<T> {
 pub struct MutexGuard<'a, T> {
     mutex: &'a Mutex<T>
 }
+
+unsafe impl<T: Sync> Sync for MutexGuard<'_, T> {}
 
 impl<T> Deref for MutexGuard<'_, T> {
     type Target = T;

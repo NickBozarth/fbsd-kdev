@@ -15,4 +15,12 @@ extern "Rust" fn init() -> Result<(), c_int> {
     let z = &mut *y;
 
     Ok(())
+
+}
+
+
+struct DOpenParams;
+
+fn open(params: DOpenParams) -> c_int {
+    todo!()
 }

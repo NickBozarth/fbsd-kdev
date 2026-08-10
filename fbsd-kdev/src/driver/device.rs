@@ -36,6 +36,9 @@ pub struct Cdev<'a> {
     name: &'a str
 }
 
+unsafe impl Sync for Cdev<'_> {}
+unsafe impl Send for Cdev<'_> {}
+
 impl Cdev<'_> {
     pub(crate) const fn new() -> Self {
         Self {
