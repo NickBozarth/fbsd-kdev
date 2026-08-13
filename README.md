@@ -34,7 +34,7 @@ The build pipeline spans two stages, one on the development machine and the othe
 Clone the repository and build the Rust static Library:
 ```bash
 git clone https://github.com/NickBozarth/fbsd-kdev.git
-cd fbsd-kdev
+cd fbsd-kdev/examples
 make
 ```
 

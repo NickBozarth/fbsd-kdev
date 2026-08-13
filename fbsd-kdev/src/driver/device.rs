@@ -7,7 +7,7 @@ pub struct Cdevsw(pub(crate) StructCdevsw);
 
 
 impl Cdevsw {
-    pub(crate) const fn new(name: *const c_char) -> Self {
+    pub const fn new(name: *const c_char) -> Self {
         Self(StructCdevsw::new(name))
     }
 

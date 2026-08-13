@@ -23,7 +23,6 @@ pub fn set_make_dev_args(mda: MakeDevArgs) {
     if let Ok(mut lock) = GLOBAL_CDEV.lock() {
         lock.set_mda(mda);
     }
-
 }
 
 pub(crate) fn init_dev() -> Result<(), c_int> {
